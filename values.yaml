@@ -19,7 +19,7 @@ clash:
 webhook:
   enabled: false  # 是否启用自动镜像重写 webhook
   image:
-    repository: ghcr.io/qiudeng7/k8s-selfhost-repo/zot-webhook
+    repository: ghcr.io/qiudeng7/k8s-selfhost-repo/zot-webhook-server
     tag: "latest"
     pullPolicy: IfNotPresent
   resources:
