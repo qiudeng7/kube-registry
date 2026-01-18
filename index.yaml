@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  kube-registry:
+  - apiVersion: v2
+    appVersion: v2.1.13
+    created: "2026-01-18T22:01:10.54236374Z"
+    description: 在k8s内部署一套镜像仓库，支持clash订阅代理和pull through cache, 无需配置每个docker的registry-mirror.
+    digest: 67070fcf58a3bdb0a8e39b03beeb48be50d6a48d0ebd5e527525b25d57829b9d
+    name: kube-registry
+    type: application
+    urls:
+    - https://github.com/qiudeng7/kube-registry/releases/download/kube-registry-0.2.0/kube-registry-0.2.0.tgz
+    version: 0.2.0
+generated: "2026-01-18T22:01:10.54237429Z"
