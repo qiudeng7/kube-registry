@@ -1,6 +1,6 @@
 # my-zot
 
-对zot chart进行简单封装，得到一个新的chart。
+对 zot chart 进行简单封装，得到一个新的chart。
 
 1. 使用S3作为zot存储后端，只需提供S3访问地址。
 2. 开启pull through cache, 自动代理 ghcr/dockerhub/quay/google/k8s 仓库
@@ -8,16 +8,7 @@
 
 ## 快速开始
 
-### 安装前准备
-
-确保已添加官方 zot chart 仓库：
-
-```bash
-helm repo add project-zot http://zotregistry.dev/helm-charts
-helm dependency update
-```
-
-### 方式1：使用命令行参数（推荐用于测试）
+### 安装方式1：使用命令行参数（推荐用于测试）
 
 ```bash
 helm install my-zot . \
@@ -25,9 +16,12 @@ helm install my-zot . \
   --set s3.bucket=my-zot-bucket \
   --set s3Credentials.accessKeyId=AKIAIOSFODNN7EXAMPLE \
   --set s3Credentials.secretAccessKey=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  # 可选：启用 Clash 代理
+  # --set clash.enabled=true \
+  # --set clash.subscriptionUrl=https://your-clash-subscription-url
 ```
 
-### 方式2：使用自定义 values 文件（推荐用于生产）
+### 安装方式2：使用自定义 values 文件（推荐用于生产）
 
 1. 复制并编辑 values 文件：
 
@@ -35,7 +29,7 @@ helm install my-zot . \
 cp values.yaml my-values.yaml
 ```
 
-2. 编辑 `my-values.yaml`，填写 S3 配置：
+2. 编辑 `my-values.yaml`，填写配置：
 
 ```yaml
 s3:
@@ -46,6 +40,11 @@ s3:
 s3Credentials:
   accessKeyId: "AKIAIOSFODNN7EXAMPLE"      # AWS_ACCESS_KEY_ID
   secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"  # AWS_SECRET_ACCESS_KEY
+
+# 可选：启用 Clash 代理
+clash:
+  enabled: true
+  subscriptionUrl: "https://your-clash-subscription-url"
 ```
 
 3. 使用自定义 values 安装：
@@ -54,7 +53,6 @@ s3Credentials:
 helm install my-zot . -f my-values.yaml
 ```
 
-### 生成的资源
 
 安装后，chart 会自动创建：
 

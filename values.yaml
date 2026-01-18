@@ -9,18 +9,26 @@ s3Credentials:
   accessKeyId: ""  # 必填：AWS_ACCESS_KEY_ID
   secretAccessKey: ""  # 必填：AWS_SECRET_ACCESS_KEY
 
+# Clash 代理配置（可选）
+clash:
+  enabled: false  # 是否启用 clash 代理
+  subscriptionUrl: ""  # 订阅链接，会自动下载配置
+
 # Zot 配置
 zot:
   replicaCount: 1
 
-  # 挂载 ConfigMap（包含 S3 配置）
-  mountConfig: true
+  # 镜像配置
+  image:
+    repository: ghcr.io/project-zot/zot
+    tag: "v2.1.13"
+    pullPolicy: IfNotPresent
 
-  # 挂载 Secret（包含 S3 凭证）
-  mountSecret: true
-
-  # 持久化（S3 模式下关闭）
-  persistence: false
+  # 服务配置
+  service:
+    type: NodePort
+    port: 5000
+    nodePort: null
 
   # 资源限制
   resources:
@@ -30,9 +38,4 @@ zot:
     limits:
       memory: "1Gi"
       cpu: "500m"
-
-  # 服务配置
-  service:
-    type: NodePort
-    port: 5000
 

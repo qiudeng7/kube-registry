@@ -33,3 +33,65 @@
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+生成 Clash 容器配置（当 clash.enabled=true 时使用）
+*/}}
+{{- define "my-zot.clashContainer" -}}
+- name: clash
+  image: dreamacro/clash:latest
+  command: ["/bin/sh", "-c"]
+  args:
+    - |
+      wget -O /root/config.yaml "$SUBSCRIPTION_URL" &&
+      /usr/bin/clash -d /root
+  env:
+    - name: SUBSCRIPTION_URL
+      value: {{ .Values.clash.subscriptionUrl | quote }}
+  ports:
+    - containerPort: 7890
+      name: http-proxy
+    - containerPort: 7891
+      name: socks5
+    - containerPort: 9090
+      name: dashboard
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+{{- end }}
+
+{{/*
+生成 Zot 代理环境变量（当 clash.enabled=true 时使用）
+*/}}
+{{- define "my-zot.proxyEnv" -}}
+- name: HTTP_PROXY
+  value: "http://127.0.0.1:7890"
+- name: HTTPS_PROXY
+  value: "http://127.0.0.1:7890"
+- name: NO_PROXY
+  value: "localhost,127.0.0.1"
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "my-zot.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "my-zot.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Standard labels
+*/}}
+{{- define "my-zot.labels" -}}
+helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+{{ include "my-zot.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}

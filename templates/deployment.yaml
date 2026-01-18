@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-zot.fullname" . }}
+  labels:
+    {{- include "my-zot.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.zot.replicaCount }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "my-zot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.s3.region }}
+        checksum/config: {{ include "my-zot.fullname" . }}-config
+        {{- end }}
+      labels:
+        {{- include "my-zot.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        # Zot 主容器
+        - name: zot
+          image: "{{ .Values.zot.image.repository }}:{{ .Values.zot.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.zot.image.pullPolicy }}
+          env:
+            # S3 凭证
+            {{- if .Values.s3Credentials.accessKeyId }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "my-zot.fullname" . }}-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "my-zot.fullname" . }}-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            {{- end }}
+            # 代理配置（启用 clash 时自动添加）
+            {{- if .Values.clash.enabled }}
+            - name: HTTP_PROXY
+              value: "http://127.0.0.1:7890"
+            - name: HTTPS_PROXY
+              value: "http://127.0.0.1:7890"
+            - name: NO_PROXY
+              value: "localhost,127.0.0.1"
+            {{- end }}
+          ports:
+            - name: zot
+              containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/registry
+            {{- if .Values.s3.region }}
+            - mountPath: /etc/zot
+              name: config
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 5000
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+          resources:
+            {{- toYaml .Values.zot.resources | nindent 12 }}
+
+        # Clash 代理容器（条件添加）
+        {{- if .Values.clash.enabled }}
+        - name: clash
+          image: dreamacro/clash:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              wget -O /root/config.yaml "$SUBSCRIPTION_URL" &&
+              /usr/bin/clash -d /root
+          env:
+            - name: SUBSCRIPTION_URL
+              value: {{ .Values.clash.subscriptionUrl | quote }}
+          ports:
+            - containerPort: 7890
+              name: http-proxy
+            - containerPort: 7891
+              name: socks5
+            - containerPort: 9090
+              name: dashboard
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+        {{- end }}
+
+      volumes:
+        - name: data
+          emptyDir: {}
+        {{- if .Values.s3.region }}
+        - name: config
+          configMap:
+            name: {{ include "my-zot.fullname" . }}-config
+        {{- end }}
