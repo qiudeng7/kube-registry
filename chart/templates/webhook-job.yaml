@@ -3,9 +3,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook-cert-gen
+  name: {{ include "kube-registry.fullname" . }}-webhook-cert-gen
   labels:
-    {{- include "k8s-selfhost-repo.labels" . | nindent 4 }}
+    {{- include "kube-registry.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -13,7 +13,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook-cert-gen
+      name: {{ include "kube-registry.fullname" . }}-webhook-cert-gen
     spec:
       restartPolicy: OnFailure
       containers:
@@ -24,8 +24,8 @@ spec:
         - -c
         - |
           set -e
-          CERT_NAME={{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
-          SERVICE={{ include "k8s-selfhost-repo.fullname" . }}-webhook
+          CERT_NAME={{ include "kube-registry.fullname" . }}-webhook-certs
+          SERVICE={{ include "kube-registry.fullname" . }}-webhook
           NAMESPACE={{ .Release.Namespace }}
 
           # 检查 secret 是否已存在
@@ -76,7 +76,7 @@ spec:
 
           # 更新 MutatingWebhookConfiguration 的 CA bundle
           CA_BUNDLE=$(cat ca.crt | base64 -w 0)
-          kubectl patch mutatingwebhookconfiguration {{ include "k8s-selfhost-repo.fullname" . }}-webhook \
+          kubectl patch mutatingwebhookconfiguration {{ include "kube-registry.fullname" . }}-webhook \
             --type='json' -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\":\"${CA_BUNDLE}\"}]" -n $NAMESPACE || true
 
           echo "Secret created successfully"

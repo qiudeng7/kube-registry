@@ -4,10 +4,10 @@
 结果截断到 63 个字符并移除末尾连字符
 
 示例:
-  - Release.Name: "my-release", Chart.Name: "k8s-selfhost-repo" → "k8s-selfhost-repo"
-  - Release.Name: "my-release", Chart.Name: "k8s-selfhost-repo", nameOverride: "zot" → "zot"
+  - Release.Name: "my-release", Chart.Name: "kube-registry" → "kube-registry"
+  - Release.Name: "my-release", Chart.Name: "kube-registry", nameOverride: "zot" → "zot"
 */}}
-{{- define "k8s-selfhost-repo.name" -}}
+{{- define "kube-registry.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -17,11 +17,11 @@
 如果设置了 fullnameOverride，则直接使用该值
 
 示例:
-  - Release.Name: "prod" → "prod-k8s-selfhost-repo"
-  - Release.Name: "k8s-selfhost-repo-prod" → "k8s-selfhost-repo-prod" (避免重复)
+  - Release.Name: "prod" → "prod-kube-registry"
+  - Release.Name: "kube-registry-prod" → "kube-registry-prod" (避免重复)
   - fullnameOverride: "zot-prod" → "zot-prod"
 */}}
-{{- define "k8s-selfhost-repo.fullname" -}}
+{{- define "kube-registry.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -37,7 +37,7 @@
 {{/*
 生成 Clash 容器配置（当 clash.enabled=true 时使用）
 */}}
-{{- define "k8s-selfhost-repo.clashContainer" -}}
+{{- define "kube-registry.clashContainer" -}}
 - name: clash
   image: dreamacro/clash:latest
   command: ["/bin/sh", "-c"]
@@ -67,7 +67,7 @@
 {{/*
 生成 Zot 代理环境变量（当 clash.enabled=true 时使用）
 */}}
-{{- define "k8s-selfhost-repo.proxyEnv" -}}
+{{- define "kube-registry.proxyEnv" -}}
 - name: HTTP_PROXY
   value: "http://127.0.0.1:7890"
 - name: HTTPS_PROXY
@@ -79,17 +79,17 @@
 {{/*
 Selector labels
 */}}
-{{- define "k8s-selfhost-repo.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "k8s-selfhost-repo.name" . }}
+{{- define "kube-registry.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "kube-registry.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Standard labels
 */}}
-{{- define "k8s-selfhost-repo.labels" -}}
+{{- define "kube-registry.labels" -}}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-{{ include "k8s-selfhost-repo.selectorLabels" . }}
+{{ include "kube-registry.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}

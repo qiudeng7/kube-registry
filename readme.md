@@ -1,13 +1,14 @@
-# k8s-selfhost-repo
+# kube-registry
 
-k8s自托管仓库，支持clash代理和pull through cache，用户只需要设置订阅链接和对象存储，部署过本仓库之后，集群内的所有镜像拉取都会先检查对象存储中有没有缓存，如果没有缓存就用clash代理，不需要对每个节点的docker都进行配置。
+本仓库提供一个chart，在k8s内部署一套镜像仓库，支持clash订阅代理和pull through cache, 无需配置每个docker的registry-mirror.
+
 
 ## 工作原理
 
 ```mermaid
 graph TD
     A[用户创建 Pod<br/>kubectl run nginx --image=nginx:latest] --> B[Mutating Admission Webhook<br/>拦截并重写镜像地址]
-    B --> C[nginx:latest<br/>↓<br/>k8s-selfhost-repo:5000/dockerhub/nginx:latest]
+    B --> C[nginx:latest<br/>↓<br/>kube-registry:5000/dockerhub/nginx:latest]
     C --> D[Kubelet<br/>从重写后的地址拉取镜像]
     D --> E[Zot 镜像仓库服务]
     E --> F{检查 S3 缓存}
@@ -24,7 +25,7 @@ graph TD
 ### 安装方式1：从 GHCR 安装（推荐）
 
 ```bash
-helm install my-repo oci://ghcr.io/qiudeng7/charts/k8s-selfhost-repo \
+helm install my-repo oci://ghcr.io/qiudeng7/charts/kube-registry \
   --set s3.region=us-east-1 \
   --set s3.bucket=my-zot-bucket \
   --set s3Credentials.accessKeyId=AKIAIOSFODNN7EXAMPLE \

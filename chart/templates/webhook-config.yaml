@@ -4,11 +4,11 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook
+  name: {{ include "kube-registry.fullname" . }}-webhook
   annotations:
-    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "kube-registry.fullname" . }}-webhook-certs
 webhooks:
-- name: {{ include "k8s-selfhost-repo.fullname" . }}.{{ .Release.Namespace }}.svc
+- name: {{ include "kube-registry.fullname" . }}.{{ .Release.Namespace }}.svc
   # 哪些请求需要发送webhook？
   # 创建pods的请求
   rules:
@@ -24,7 +24,7 @@ webhooks:
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}
-      name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook
+      name: {{ include "kube-registry.fullname" . }}-webhook
       path: /mutate
       port: 443
 {{- end }}

@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "k8s-selfhost-repo.fullname" . }}
+  name: {{ include "kube-registry.fullname" . }}
   labels:
-    {{- include "k8s-selfhost-repo.labels" . | nindent 4 }}
+    {{- include "kube-registry.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.zot.replicaCount }}
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      {{- include "k8s-selfhost-repo.selectorLabels" . | nindent 6 }}
+      {{- include "kube-registry.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         {{- if .Values.zot.s3.config.region }}
-        checksum/config: {{ include "k8s-selfhost-repo.fullname" . }}-config
+        checksum/config: {{ include "kube-registry.fullname" . }}-config
         {{- end }}
       labels:
-        {{- include "k8s-selfhost-repo.selectorLabels" . | nindent 8 }}
+        {{- include "kube-registry.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         # Zot 主容器
@@ -31,12 +31,12 @@ spec:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "k8s-selfhost-repo.fullname" . }}-secret
+                  name: {{ include "kube-registry.fullname" . }}-secret
                   key: AWS_ACCESS_KEY_ID
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "k8s-selfhost-repo.fullname" . }}-secret
+                  name: {{ include "kube-registry.fullname" . }}-secret
                   key: AWS_SECRET_ACCESS_KEY
             {{- end }}
             # 代理配置（启用 clash 时自动添加）
@@ -95,5 +95,5 @@ spec:
         {{- if .Values.zot.s3.config.region }}
         - name: config
           configMap:
-            name: {{ include "k8s-selfhost-repo.fullname" . }}-config
+            name: {{ include "kube-registry.fullname" . }}-config
         {{- end }}

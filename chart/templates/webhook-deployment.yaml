@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook
+  name: {{ include "kube-registry.fullname" . }}-webhook
   labels:
-    {{- include "k8s-selfhost-repo.labels" . | nindent 4 }}
+    {{- include "kube-registry.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "k8s-selfhost-repo.selectorLabels" . | nindent 6 }}
+      {{- include "kube-registry.selectorLabels" . | nindent 6 }}
       app: webhook
   template:
     metadata:
       labels:
-        {{- include "k8s-selfhost-repo.selectorLabels" . | nindent 8 }}
+        {{- include "kube-registry.selectorLabels" . | nindent 8 }}
         app: webhook
     spec:
       containers:
@@ -23,7 +23,7 @@ spec:
           imagePullPolicy: {{ .Values.webhook.image.pullPolicy }}
           env:
             - name: ZOT_URL
-              value: {{ include "k8s-selfhost-repo.fullname" . }}:{{ .Values.zot.service.port }}
+              value: {{ include "kube-registry.fullname" . }}:{{ .Values.zot.service.port }}
           ports:
             - containerPort: 443
           volumeMounts:
@@ -45,5 +45,5 @@ spec:
       volumes:
         - name: webhook-certs
           secret:
-            secretName: {{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
+            secretName: {{ include "kube-registry.fullname" . }}-webhook-certs
 {{- end }}

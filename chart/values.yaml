@@ -37,7 +37,7 @@ clash:
   enabled: false  # 是否启用 clash 代理
   subscriptionUrl: ""  # 订阅链接，会自动下载配置
   image:
-    repository: ghcr.io/qiudeng7/k8s-selfhost-repo/clash-sidecar
+    repository: ghcr.io/qiudeng7/kube-registry/clash-sidecar
     tag: "latest"
     pullPolicy: IfNotPresent
   resources:
@@ -53,7 +53,7 @@ clash:
 webhook:
   enabled: false  # 是否启用自动镜像重写 webhook
   image:
-    repository: ghcr.io/qiudeng7/k8s-selfhost-repo/zot-webhook-server
+    repository: ghcr.io/qiudeng7/kube-registry/zot-webhook-server
     tag: "latest"
     pullPolicy: IfNotPresent
   resources:
