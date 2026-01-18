@@ -1,3 +1,5 @@
+# webhook配置
+# https://kubernetes.io/zh-cn/docs/reference/access-authn-authz/extensible-admission-controllers
 {{- if .Values.webhook.enabled }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -7,6 +9,8 @@ metadata:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
 webhooks:
 - name: {{ include "k8s-selfhost-repo.fullname" . }}.{{ .Release.Namespace }}.svc
+  # 哪些请求需要发送webhook？
+  # 创建pods的请求
   rules:
   - operations: ["CREATE"]
     apiGroups: [""]
@@ -15,6 +19,8 @@ webhooks:
   failurePolicy: Ignore
   sideEffects: None
   admissionReviewVersions: ["v1"]
+  # webhook发到哪里去？
+  # 我们自己部署的webhook server
   clientConfig:
     service:
       namespace: {{ .Release.Namespace }}

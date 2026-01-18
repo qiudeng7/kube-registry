@@ -1,3 +1,4 @@
+# 在helm install时执行一次该job,注入证书到webhook服务器, 因为k8s发送的webhook请求必须是https请求。
 {{- if .Values.webhook.enabled }}
 apiVersion: batch/v1
 kind: Job

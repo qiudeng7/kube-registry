@@ -14,7 +14,8 @@ clash:
   enabled: false  # 是否启用 clash 代理
   subscriptionUrl: ""  # 订阅链接，会自动下载配置
 
-# Webhook 配置（可选）
+# Webhook 配置
+# 如果开启webhook，则会自动改写apiserver收到的所有创建pod的请求，全部通过本仓库进行代理
 webhook:
   enabled: false  # 是否启用自动镜像重写 webhook
   image:
@@ -29,7 +30,7 @@ webhook:
       memory: "128Mi"
       cpu: "100m"
 
-# Zot 配置
+# Zot仓库配置
 zot:
   replicaCount: 1
 
