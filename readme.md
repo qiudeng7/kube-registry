@@ -6,3 +6,73 @@
 2. 开启pull through cache, 自动代理 ghcr/dockerhub/quay/google/k8s 仓库
 3. 自带一个 clash/mihomo，只需提供订阅链接。
 
+## 快速开始
+
+### 安装前准备
+
+确保已添加官方 zot chart 仓库：
+
+```bash
+helm repo add project-zot http://zotregistry.dev/helm-charts
+helm dependency update
+```
+
+### 方式1：使用命令行参数（推荐用于测试）
+
+```bash
+helm install my-zot . \
+  --set s3.region=us-east-1 \
+  --set s3.bucket=my-zot-bucket \
+  --set s3Credentials.accessKeyId=AKIAIOSFODNN7EXAMPLE \
+  --set s3Credentials.secretAccessKey=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+### 方式2：使用自定义 values 文件（推荐用于生产）
+
+1. 复制并编辑 values 文件：
+
+```bash
+cp values.yaml my-values.yaml
+```
+
+2. 编辑 `my-values.yaml`，填写 S3 配置：
+
+```yaml
+s3:
+  region: "us-east-1"           # 你的 S3 区域
+  bucket: "my-zot-bucket"       # 你的 S3 存储桶名称
+  regionEndpoint: ""            # 可选：MinIO 等自定义 endpoint
+
+s3Credentials:
+  accessKeyId: "AKIAIOSFODNN7EXAMPLE"      # AWS_ACCESS_KEY_ID
+  secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"  # AWS_SECRET_ACCESS_KEY
+```
+
+3. 使用自定义 values 安装：
+
+```bash
+helm install my-zot . -f my-values.yaml
+```
+
+### 生成的资源
+
+安装后，chart 会自动创建：
+
+- **ConfigMap** `my-zot-config`：包含 S3 配置（region、bucket）
+- **Secret** `my-zot-secret`：包含 AWS 凭证（accessKeyId、secretAccessKey）
+- **Zot 部署**：自动挂载上述 ConfigMap 和 Secret
+
+### 验证安装
+
+```bash
+# 查看 Pod 状态
+kubectl get pods -l app.kubernetes.io/name=zot
+
+# 查看 S3 配置
+kubectl get configmap my-zot-config -o yaml
+
+# 获取访问地址
+export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+export NODE_PORT=$(kubectl get svc my-zot -o jsonpath='{.spec.ports[0].nodePort}')
+echo "访问地址: http://${NODE_IP}:${NODE_PORT}"
+```
