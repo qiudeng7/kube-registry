@@ -73,12 +73,8 @@ spec:
         # Clash 代理容器（条件添加）
         {{- if .Values.clash.enabled }}
         - name: clash
-          image: dreamacro/clash:latest
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              wget -O /root/config.yaml "$SUBSCRIPTION_URL" &&
-              /usr/bin/clash -d /root
+          image: "{{ .Values.clash.image.repository }}:{{ .Values.clash.image.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.clash.image.pullPolicy }}
           env:
             - name: SUBSCRIPTION_URL
               value: {{ .Values.clash.subscriptionUrl | quote }}
@@ -90,12 +86,7 @@ spec:
             - containerPort: 9090
               name: dashboard
           resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
+            {{- toYaml .Values.clash.resources | nindent 12 }}
         {{- end }}
 
       volumes:

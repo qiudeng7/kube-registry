@@ -1,0 +1,60 @@
+name: Build Clash Sidecar
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+
+env:
+  REGISTRY: ghcr.io
+  CLASH_IMAGE_NAME: ${{ github.repository }}/clash-sidecar
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ==================== 构建 clash sidecar 镜像 ====================
+      - name: Extract clash sidecar metadata
+        id: clash-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.CLASH_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push clash sidecar image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./clash-sidecar
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.clash-meta.outputs.tags }}
+          labels: ${{ steps.clash-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            MIHOMO_VERSION=v1.18.10
+            YQ_VERSION=v4.44.3
