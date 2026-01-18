@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kube-registry
-description: K8s 自托管仓库，集成 Zot 镜像仓库、Clash 代理、自动镜像重写Webhook.
+description: 在k8s内部署一套镜像仓库，支持clash订阅代理和pull through cache, 无需配置每个docker的registry-mirror.
 
 # A chart can be either an 'application' or a 'library' chart.
 #
