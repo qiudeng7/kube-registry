@@ -4,8 +4,20 @@ k8s自托管仓库，支持clash代理和pull through cache，用户只需要设
 
 ## 工作原理
 
-<!-- TODO -->
-
+```mermaid
+graph TD
+    A[用户创建 Pod<br/>kubectl run nginx --image=nginx:latest] --> B[Mutating Admission Webhook<br/>拦截并重写镜像地址]
+    B --> C[nginx:latest<br/>↓<br/>k8s-selfhost-repo:5000/dockerhub/nginx:latest]
+    C --> D[Kubelet<br/>从重写后的地址拉取镜像]
+    D --> E[Zot 镜像仓库服务]
+    E --> F{检查 S3 缓存}
+    F -->|缓存命中| G[直接返回镜像]
+    F -->|缓存未命中| H[Clash 代理<br/>加速访问海外仓库]
+    H --> I[上游镜像仓库<br/>ghcr.io/docker.io/quay.io/registry.k8s.io]
+    I --> J[镜像存储到 S3<br/>供下次使用]
+    J --> D
+    G --> D
+```
 
 ## 快速开始
 
