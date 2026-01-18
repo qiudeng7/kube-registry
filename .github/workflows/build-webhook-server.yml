@@ -1,4 +1,4 @@
-name: Release
+name: Build Webhook Server
 
 on:
   push:
@@ -55,18 +55,3 @@ jobs:
           labels: ${{ steps.webhook-meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # ==================== 发布 Helm Chart ====================
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: 'v3.12.0'
-
-      - name: Package Helm Chart
-        run: |
-          helm package . -d ./chart-package
-
-      - name: Push Helm Chart to GHCR
-        run: |
-          # 推送 chart 到 GHCR
-          helm push ./chart-package/*.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}

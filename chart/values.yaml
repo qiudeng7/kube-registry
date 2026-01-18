@@ -7,7 +7,7 @@ zot:
     config:
       region: ""  # 必填：例如 us-east-1
       bucket: ""  # 必填：S3 存储桶名称
-      regionEndpoint: ""  # 可选：自定义 S3 endpoint（如 MinIO）
+      regionEndpoin: ""  # 可选：自定义 S3 endpoint（如 MinIO）
     secret:
       accessKeyId: ""  # 必填：AWS_ACCESS_KEY_ID
       secretAccessKey: ""  # 必填：AWS_SECRET_ACCESS_KEY

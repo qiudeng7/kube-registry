@@ -1,6 +1,3 @@
-# Helm 依赖（动态下载，不提交）
-charts/
-
 # Helm 打包文件
 *.tgz
 
