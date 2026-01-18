@@ -1,0 +1,27 @@
+# kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+
+  extraPortMappings:
+    # 镜像仓库端口 http://localhost:5000
+    - containerPort: 5000
+      hostPort: 5000
+      protocol: TCP
+
+  # kubelet 开启 webhook，用于kube prometheus
+  kubeadmConfigPatches:
+  - |
+    kind: JoinConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        authentication-token-webhook: "true"
+        authorization-mode: "Webhook"
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        authentication-token-webhook: "true"
+        authorization-mode: "Webhook"
+- role: worker
