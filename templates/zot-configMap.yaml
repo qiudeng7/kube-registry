@@ -1,4 +1,4 @@
-{{- if .Values.s3.region }}
+{{- if .Values.zot.s3.config.region }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,11 +12,11 @@ data:
         "dedupe": true,
         "storageDriver": {
           "name": "s3",
-          "region": "{{ .Values.s3.region }}",
-          {{- if .Values.s3.regionEndpoint }}
-          "regionEndpoint": "{{ .Values.s3.regionEndpoint }}",
+          "region": "{{ .Values.zot.s3.config.region }}",
+          {{- if .Values.zot.s3.config.regionEndpoint }}
+          "regionEndpoint": "{{ .Values.zot.s3.config.regionEndpoint }}",
           {{- end }}
-          "bucket": "{{ .Values.s3.bucket }}",
+          "bucket": "{{ .Values.zot.s3.config.bucket }}",
           "secure": true,
           "skipverify": false
         }

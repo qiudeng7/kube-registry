@@ -1,13 +1,36 @@
-# S3 存储配置（必填）
-s3:
-  region: ""  # 必填：例如 us-east-1
-  bucket: ""  # 必填：S3 存储桶名称
-  regionEndpoint: ""  # 可选：自定义 S3 endpoint（如 MinIO）
+# Zot仓库配置
+zot:
+  replicaCount: 1
 
-# S3 访问凭证（必填）
-s3Credentials:
-  accessKeyId: ""  # 必填：AWS_ACCESS_KEY_ID
-  secretAccessKey: ""  # 必填：AWS_SECRET_ACCESS_KEY
+  # S3 存储配置（必填）
+  s3:
+    config:
+      region: ""  # 必填：例如 us-east-1
+      bucket: ""  # 必填：S3 存储桶名称
+      regionEndpoint: ""  # 可选：自定义 S3 endpoint（如 MinIO）
+    secret:
+      accessKeyId: ""  # 必填：AWS_ACCESS_KEY_ID
+      secretAccessKey: ""  # 必填：AWS_SECRET_ACCESS_KEY
+  # 镜像配置
+  image:
+    repository: ghcr.io/project-zot/zot
+    tag: "v2.1.13"
+    pullPolicy: IfNotPresent
+
+  # 服务配置
+  service:
+    type: NodePort
+    port: 5000
+    nodePort: null
+
+  # 资源限制
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
 
 # Clash 代理配置（可选）
 clash:
@@ -40,29 +63,3 @@ webhook:
     limits:
       memory: "128Mi"
       cpu: "100m"
-
-# Zot仓库配置
-zot:
-  replicaCount: 1
-
-  # 镜像配置
-  image:
-    repository: ghcr.io/project-zot/zot
-    tag: "v2.1.13"
-    pullPolicy: IfNotPresent
-
-  # 服务配置
-  service:
-    type: NodePort
-    port: 5000
-    nodePort: null
-
-  # 资源限制
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "250m"
-    limits:
-      memory: "1Gi"
-      cpu: "500m"
-

@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if .Values.s3.region }}
+        {{- if .Values.zot.s3.config.region }}
         checksum/config: {{ include "k8s-selfhost-repo.fullname" . }}-config
         {{- end }}
       labels:
@@ -27,7 +27,7 @@ spec:
           imagePullPolicy: {{ .Values.zot.image.pullPolicy }}
           env:
             # S3 凭证
-            {{- if .Values.s3Credentials.accessKeyId }}
+            {{- if .Values.zot.s3.secret.accessKeyId }}
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -55,7 +55,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/registry
-            {{- if .Values.s3.region }}
+            {{- if .Values.zot.s3.config.region }}
             - mountPath: /etc/zot
               name: config
             {{- end }}
@@ -92,7 +92,7 @@ spec:
       volumes:
         - name: data
           emptyDir: {}
-        {{- if .Values.s3.region }}
+        {{- if .Values.zot.s3.config.region }}
         - name: config
           configMap:
             name: {{ include "k8s-selfhost-repo.fullname" . }}-config
