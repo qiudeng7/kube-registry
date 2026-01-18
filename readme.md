@@ -1,10 +1,7 @@
-# my-zot
+# zot pull through cache
 
-对 zot chart 进行简单封装，得到一个新的chart。
+使用 clash订阅 加速镜像拉取，镜像缓存到zot镜像仓库（后端为对象存储），通过Admission Webhook实现自动修改集群内所有的镜像拉取都使用本地仓库，自带webUI。
 
-1. 使用S3作为zot存储后端，只需提供S3访问地址。
-2. 开启pull through cache, 自动代理 ghcr/dockerhub/quay/google/k8s 仓库
-3. 自带一个 clash/mihomo，只需提供订阅链接。
 
 ## 快速开始
 
