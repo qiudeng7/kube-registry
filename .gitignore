@@ -25,3 +25,5 @@ Thumbs.db
 # Node.js
 webhook/node_modules/
 webhook/package-lock.json
+
+.env

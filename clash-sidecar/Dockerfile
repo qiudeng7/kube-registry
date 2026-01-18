@@ -5,8 +5,12 @@ FROM alpine:3.19
 RUN apk add --no-cache \
     bash \
     curl \
+    wget \
     ca-certificates \
-    shadow
+    ca-certificates-bundle \
+    openssl \
+    shadow && \
+    update-ca-certificates
 
 # Create app user and directory
 RUN addgroup -g 1000 clash && \
@@ -17,9 +21,29 @@ RUN addgroup -g 1000 clash && \
 # Set working directory
 WORKDIR /home/clash
 
+# Download GeoIP and GeoSite databases (essential for clash to work)
+# These databases are required for GEOIP and GEOSITE rules in clash configs
+RUN echo "Downloading GeoIP database..." && \
+    (wget --no-check-certificate --tries=5 --timeout=60 -qO- \
+        "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb" \
+        > /home/clash/.config/clash/Country.mmdb || \
+    curl -k --ssl-no-revoke --retry 5 --connect-timeout 15 --max-time 60 -L \
+        "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb" \
+        -o /home/clash/.config/clash/Country.mmdb) && \
+    echo "Downloading GeoSite database..." && \
+    (wget --no-check-certificate --tries=5 --timeout=60 -qO- \
+        "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat" \
+        > /home/clash/.config/clash/geosite.dat || \
+    curl -k --ssl-no-revoke --retry 5 --connect-timeout 15 --max-time 60 -L \
+        "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat" \
+        -o /home/clash/.config/clash/geosite.dat) && \
+    chown clash:clash /home/clash/.config/clash/*.mmdb /home/clash/.config/clash/*.dat && \
+    ls -lh /home/clash/.config/clash/
+
 # Download and install mihomo (clash premium alternative)
 # Using mihomo for better compatibility and active development
-ARG MIHOMO_VERSION=v1.18.10
+# Use version without CPU optimization prefix for better compatibility
+ARG MIHOMO_VERSION=v1.18.7
 RUN ARCH=$(uname -m) && \
     case "$ARCH" in \
         x86_64)  MIHOMO_ARCH="amd64" ;; \
@@ -27,14 +51,31 @@ RUN ARCH=$(uname -m) && \
         armv7l)  MIHOMO_ARCH="armv7" ;; \
         *)       MIHOMO_ARCH="amd64" ;; \
     esac && \
-    curl -fsSL "https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-${MIHOMO_ARCH}.gz" | \
+    MIHOMO_BASE_URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}" && \
+    MIHOMO_URL="${MIHOMO_BASE_URL}/mihomo-linux-${MIHOMO_ARCH}-${MIHOMO_VERSION}.gz" && \
+    echo "Downloading mihomo ${MIHOMO_VERSION} for ${MIHOMO_ARCH}..." && \
+    echo "URL: ${MIHOMO_URL}" && \
+    (wget --no-check-certificate --tries=5 --timeout=60 -qO- "${MIHOMO_URL}" || \
+    curl -k --ssl-no-revoke --retry 5 --connect-timeout 15 --max-time 60 -L "${MIHOMO_URL}") | \
     gunzip - > /usr/local/bin/clash && \
-    chmod +x /usr/local/bin/clash
+    chmod +x /usr/local/bin/clash && \
+    /usr/local/bin/clash -v
 
 # Download and install yq for YAML processing
 ARG YQ_VERSION=v4.44.3
-RUN curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" -o /usr/local/bin/yq && \
-    chmod +x /usr/local/bin/yq
+RUN ARCH=$(uname -m) && \
+    case "$ARCH" in \
+        x86_64)  YQ_ARCH="amd64" ;; \
+        aarch64) YQ_ARCH="arm64" ;; \
+        armv7l)  YQ_ARCH="arm" ;; \
+        *)       YQ_ARCH="amd64" ;; \
+    esac && \
+    YQ_URL="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${YQ_ARCH}" && \
+    echo "Downloading yq ${YQ_VERSION} for ${YQ_ARCH}..." && \
+    (wget --no-check-certificate --tries=5 --timeout=60 -qO "${YQ_URL}" /usr/local/bin/yq || \
+    curl -k --ssl-no-revoke --retry 5 --connect-timeout 15 --max-time 60 -L "${YQ_URL}" -o /usr/local/bin/yq) && \
+    chmod +x /usr/local/bin/yq && \
+    /usr/local/bin/yq --version
 
 # Copy main.sh script
 COPY --chown=clash:clash main.sh /home/clash/main.sh

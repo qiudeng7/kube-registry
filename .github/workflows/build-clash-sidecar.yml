@@ -56,5 +56,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            MIHOMO_VERSION=v1.18.10
+            MIHOMO_VERSION=v1.18.7
             YQ_VERSION=v4.44.3

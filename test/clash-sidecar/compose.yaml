@@ -1,0 +1,7 @@
+services:
+  clash:
+    build: ../../clash-sidecar
+    ports:
+      - 8888:7890
+    env_file:
+      - .env

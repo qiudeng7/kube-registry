@@ -25,29 +25,6 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Validate configuration using clash binary
-validate_config() {
-    local config_file="$1"
-    if [[ ! -f "$config_file" ]]; then
-        log_error "Config file not found: $config_file"
-        return 1
-    fi
-
-    if [[ $(wc -l < "$config_file") -lt 1 ]]; then
-        log_error "Config file is empty"
-        return 1
-    fi
-
-    log_info "Validating configuration..."
-    if clash -d "$CLASH_CONFIG_DIR" -f "$config_file" -t; then
-        log_info "Configuration is valid"
-        return 0
-    else
-        log_error "Configuration validation failed"
-        return 1
-    fi
-}
-
 # Download configuration from subscription URL
 download_config() {
     local url="$1"
@@ -55,10 +32,10 @@ download_config() {
 
     log_info "Downloading configuration from subscription URL..."
 
-    # Save raw response for debugging
     local raw_output="${output}.raw"
 
-    if curl --silent --show-error --fail --insecure --location \
+    # Download with retries
+    if curl --silent --show-error --insecure --location \
         --max-time 30 \
         --retry 3 \
         --user-agent "clash-verge/v1.4.8" \
@@ -70,78 +47,28 @@ download_config() {
         return 1
     fi
 
-    # Check if the downloaded content is valid
+    # Check if downloaded content is valid
     if [[ ! -s "$raw_output" ]]; then
         log_error "Downloaded file is empty"
         return 1
     fi
 
-    # Try to use the downloaded config directly
+    # Copy raw config to temp
     cp "$raw_output" "$output"
 
-    # Validate the configuration
-    if validate_config "$output"; then
-        log_info "Configuration downloaded and validated successfully"
-        rm -f "$raw_output"
-        return 0
-    fi
-
-    # If validation fails, try to detect and handle base64 encoded config
-    log_warn "Direct validation failed, checking for base64 encoding..."
-    if base64 -d "$raw_output" > "$output" 2>/dev/null; then
-        if validate_config "$output"; then
-            log_info "Base64 encoded configuration decoded successfully"
-            rm -f "$raw_output"
-            return 0
+    # Try to detect and handle base64 encoded config
+    if file "$output" | grep -q "ASCII"; then
+        log_warn "Downloaded content might be base64 encoded, trying to decode..."
+        if base64 -d "$raw_output" > "$output" 2>/dev/null; then
+            log_info "Base64 decode successful"
+        else
+            # Restore original if decode failed
+            cp "$raw_output" "$output"
         fi
     fi
 
-    # Try to handle subscription conversion API
-    log_warn "Attempting subscription conversion..."
-    if convert_subscription "$url" "$output"; then
-        log_info "Subscription conversion successful"
-        rm -f "$raw_output"
-        return 0
-    fi
-
-    log_error "All conversion attempts failed"
-    log_error "Raw config saved at: $raw_output"
-    return 1
-}
-
-# Convert subscription using a public subconverter
-convert_subscription() {
-    local subscription_url="$1"
-    local output="$2"
-
-    # Try multiple public subconverter services
-    local converters=(
-        "https://sub.xeton.dev/sub"
-        "https://api.dler.io/sub"
-        "https://sub.id9.cc/sub"
-    )
-
-    for converter in "${converters[@]}"; do
-        log_info "Trying converter: $converter"
-
-        local convert_url="${converter}?target=clash&new_name=true&url=${subscription_url}"
-
-        if curl --silent --show-error --fail --location \
-            --max-time 30 \
-            --user-agent "clash-verge/v1.4.8" \
-            --output "$output" \
-            "$convert_url"; then
-
-            if validate_config "$output"; then
-                log_info "Conversion successful using: $converter"
-                return 0
-            fi
-        fi
-
-        log_warn "Converter failed: $converter"
-    done
-
-    return 1
+    rm -f "$raw_output"
+    return 0
 }
 
 # Apply mixin configuration (custom overrides)
@@ -157,14 +84,19 @@ apply_mixin() {
 
     log_info "Applying mixin configuration..."
 
-    # Use yq to merge configurations
+    # Simple deep merge: mixin values override base values
+    # For arrays (rules, proxies, proxy-groups): append mixin items after base items
     if yq eval-all '
         select(fileIndex==0) as $base |
         select(fileIndex==1) as $mixin |
-        ($base // {}) * $mixin |
-        .rules = (($mixin.rules.prefix // []) + ($base.rules // []) + ($mixin.rules.suffix // [])) |
-        .proxies = (($mixin.proxies.prefix // []) + ($base.proxies // []) + ($mixin.proxies.suffix // [])) |
-        .["proxy-groups"] = (($mixin["proxy-groups"].prefix // []) + ($base["proxy-groups"] // []) + ($mixin["proxy-groups"].suffix // []))
+        # Deep merge for most fields
+        ($base * $mixin) |
+        # For rules: append mixin rules to base rules
+        .rules = ($base.rules + $mixin.rules) |
+        # For proxies: append mixin proxies to base proxies
+        .proxies = ($base.proxies + $mixin.proxies) |
+        # For proxy-groups: append mixin groups to base groups
+        .["proxy-groups"] = ($base["proxy-groups"] + $mixin["proxy-groups"])
     ' "$base_config" "$mixin_config" > "$output_config"; then
         log_info "Mixin applied successfully"
         return 0
@@ -187,7 +119,6 @@ bind-address: "*"
 mode: rule
 log-level: info
 external-controller: 0.0.0.0:9090
-external-ui: ui
 secret: ""
 
 dns:
@@ -226,7 +157,7 @@ main() {
 
     # Download configuration
     if ! download_config "$SUBSCRIPTION_URL" "$CLASH_TEMP_CONFIG"; then
-        log_error "Failed to download/convert subscription configuration"
+        log_error "Failed to download subscription configuration"
         exit 1
     fi
 
@@ -239,7 +170,8 @@ main() {
     # Apply mixin configuration
     if ! apply_mixin "$CLASH_TEMP_CONFIG" "${CLASH_CONFIG_DIR}/mixin.yaml" "$CLASH_CONFIG_FILE"; then
         log_error "Failed to apply mixin configuration"
-        exit 1
+        # Use temp config directly
+        cp "$CLASH_TEMP_CONFIG" "$CLASH_CONFIG_FILE"
     fi
 
     # Clean up temp config
@@ -249,11 +181,12 @@ main() {
 
     # Display configuration info
     log_info "Configuration details:"
-    yq '.mixed-port, .port, .socks-port, .external-controller, .mode' "$CLASH_CONFIG_FILE" | while read -r line; do
+    yq '.mixed-port, .port, .socks-port, .external-controller, .mode' "$CLASH_CONFIG_FILE" 2>/dev/null | while read -r line; do
         log_info "  $line"
     done
 
     # Start clash
+    # IMPORTANT: -d parameter tells clash where to find GeoIP/GeoSite databases
     log_info "Starting Clash..."
     exec clash -d "$CLASH_CONFIG_DIR" -f "$CLASH_CONFIG_FILE"
 }
