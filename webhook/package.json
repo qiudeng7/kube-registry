@@ -1,0 +1,15 @@
+{
+  "name": "zot-image-webhook",
+  "version": "1.0.0",
+  "description": "Kubernetes Mutating Admission Webhook for Zot image registry",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

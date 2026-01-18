@@ -4,10 +4,10 @@
 结果截断到 63 个字符并移除末尾连字符
 
 示例:
-  - Release.Name: "my-release", Chart.Name: "my-zot" → "my-zot"
-  - Release.Name: "my-release", Chart.Name: "my-zot", nameOverride: "zot" → "zot"
+  - Release.Name: "my-release", Chart.Name: "k8s-selfhost-repo" → "k8s-selfhost-repo"
+  - Release.Name: "my-release", Chart.Name: "k8s-selfhost-repo", nameOverride: "zot" → "zot"
 */}}
-{{- define "my-zot.name" -}}
+{{- define "k8s-selfhost-repo.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -17,11 +17,11 @@
 如果设置了 fullnameOverride，则直接使用该值
 
 示例:
-  - Release.Name: "prod" → "prod-my-zot"
-  - Release.Name: "my-zot-prod" → "my-zot-prod" (避免重复)
+  - Release.Name: "prod" → "prod-k8s-selfhost-repo"
+  - Release.Name: "k8s-selfhost-repo-prod" → "k8s-selfhost-repo-prod" (避免重复)
   - fullnameOverride: "zot-prod" → "zot-prod"
 */}}
-{{- define "my-zot.fullname" -}}
+{{- define "k8s-selfhost-repo.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -37,7 +37,7 @@
 {{/*
 生成 Clash 容器配置（当 clash.enabled=true 时使用）
 */}}
-{{- define "my-zot.clashContainer" -}}
+{{- define "k8s-selfhost-repo.clashContainer" -}}
 - name: clash
   image: dreamacro/clash:latest
   command: ["/bin/sh", "-c"]
@@ -67,7 +67,7 @@
 {{/*
 生成 Zot 代理环境变量（当 clash.enabled=true 时使用）
 */}}
-{{- define "my-zot.proxyEnv" -}}
+{{- define "k8s-selfhost-repo.proxyEnv" -}}
 - name: HTTP_PROXY
   value: "http://127.0.0.1:7890"
 - name: HTTPS_PROXY
@@ -79,17 +79,17 @@
 {{/*
 Selector labels
 */}}
-{{- define "my-zot.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "my-zot.name" . }}
+{{- define "k8s-selfhost-repo.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "k8s-selfhost-repo.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Standard labels
 */}}
-{{- define "my-zot.labels" -}}
+{{- define "k8s-selfhost-repo.labels" -}}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-{{ include "my-zot.selectorLabels" . }}
+{{ include "k8s-selfhost-repo.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}

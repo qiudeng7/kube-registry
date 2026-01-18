@@ -1,6 +1,6 @@
 apiVersion: v2
-name: my-zot
-description: 自定义zot, S3存储, clash代理
+name: k8s-selfhost-repo
+description: K8s 自托管仓库，集成 Zot 镜像仓库、Clash 代理、自动镜像重写 Webhook
 
 # A chart can be either an 'application' or a 'library' chart.
 #

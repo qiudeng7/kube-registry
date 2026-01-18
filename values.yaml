@@ -14,6 +14,21 @@ clash:
   enabled: false  # 是否启用 clash 代理
   subscriptionUrl: ""  # 订阅链接，会自动下载配置
 
+# Webhook 配置（可选）
+webhook:
+  enabled: false  # 是否启用自动镜像重写 webhook
+  image:
+    repository: ghcr.io/qiudeng7/k8s-selfhost-repo/zot-webhook
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
 # Zot 配置
 zot:
   replicaCount: 1

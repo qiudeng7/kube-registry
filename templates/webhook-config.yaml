@@ -1,0 +1,24 @@
+{{- if .Values.webhook.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
+webhooks:
+- name: {{ include "k8s-selfhost-repo.fullname" . }}.{{ .Release.Namespace }}.svc
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  failurePolicy: Ignore
+  sideEffects: None
+  admissionReviewVersions: ["v1"]
+  clientConfig:
+    service:
+      namespace: {{ .Release.Namespace }}
+      name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook
+      path: /mutate
+      port: 443
+{{- end }}

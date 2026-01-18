@@ -1,14 +1,28 @@
-# zot pull through cache
+# k8s-selfhost-repo
 
-使用 clash订阅 加速镜像拉取，镜像缓存到zot镜像仓库（后端为对象存储），通过Admission Webhook实现自动修改集群内所有的镜像拉取都使用本地仓库，自带webUI。
+k8s自托管仓库，支持clash代理和pull through cache，用户只需要设置订阅链接和对象存储，部署过本仓库之后，集群内的所有镜像拉取都会先检查对象存储中有没有缓存，如果没有缓存就用clash代理，不需要对每个节点的docker都进行配置。
+
+## 工作原理
+
+<!-- TODO -->
 
 
 ## 快速开始
 
-### 安装方式1：使用命令行参数（推荐用于测试）
+### 安装方式1：从 GHCR 安装（推荐）
 
 ```bash
-helm install my-zot . \
+helm install my-repo oci://ghcr.io/qiudeng7/charts/k8s-selfhost-repo \
+  --set s3.region=us-east-1 \
+  --set s3.bucket=my-zot-bucket \
+  --set s3Credentials.accessKeyId=AKIAIOSFODNN7EXAMPLE \
+  --set s3Credentials.secretAccessKey=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+### 安装方式2：从源码安装
+
+```bash
+helm install my-repo . \
   --set s3.region=us-east-1 \
   --set s3.bucket=my-zot-bucket \
   --set s3Credentials.accessKeyId=AKIAIOSFODNN7EXAMPLE \
@@ -16,9 +30,11 @@ helm install my-zot . \
   # 可选：启用 Clash 代理
   # --set clash.enabled=true \
   # --set clash.subscriptionUrl=https://your-clash-subscription-url
+  # 可选：启用自动镜像重写 Webhook
+  # --set webhook.enabled=true
 ```
 
-### 安装方式2：使用自定义 values 文件（推荐用于生产）
+### 安装方式3：使用自定义 values 文件（推荐用于生产）
 
 1. 复制并编辑 values 文件：
 
@@ -42,6 +58,10 @@ s3Credentials:
 clash:
   enabled: true
   subscriptionUrl: "https://your-clash-subscription-url"
+
+# 可选：启用自动镜像重写 Webhook
+webhook:
+  enabled: true
 ```
 
 3. 使用自定义 values 安装：

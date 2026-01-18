@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "my-zot.fullname" . }}-config
+  name: {{ include "k8s-selfhost-repo.fullname" . }}-config
 data:
   config.json: |
     {

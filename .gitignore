@@ -21,3 +21,7 @@ Thumbs.db
 # 临时文件
 *.log
 *.tmp
+
+# Node.js
+webhook/node_modules/
+webhook/package-lock.json

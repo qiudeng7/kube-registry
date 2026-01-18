@@ -1,0 +1,82 @@
+{{- if .Values.webhook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook-cert-gen
+  labels:
+    {{- include "k8s-selfhost-repo.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "k8s-selfhost-repo.fullname" . }}-webhook-cert-gen
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: create
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          CERT_NAME={{ include "k8s-selfhost-repo.fullname" . }}-webhook-certs
+          SERVICE={{ include "k8s-selfhost-repo.fullname" . }}-webhook
+          NAMESPACE={{ .Release.Namespace }}
+
+          # 检查 secret 是否已存在
+          if kubectl get secret $CERT_NAME -n $NAMESPACE 2>/dev/null; then
+            echo "Secret already exists"
+            exit 0
+          fi
+
+          # 生成 CA 私钥
+          openssl genrsa -out ca.key 2048
+
+          # 生成 CA 证书
+          openssl req -new -x509 -days 365 -key ca.key -out ca.crt -subj "/CN=${SERVICE}-ca"
+
+          # 生成服务器私钥
+          openssl genrsa -out tls.key 2048
+
+          # 创建证书签名请求配置
+          cat > csr.conf <<EOF
+          [req]
+          req_extensions = v3_req
+          distinguished_name = req_distinguished_name
+          [req_distinguished_name]
+          [v3_req]
+          basicConstraints = CA:FALSE
+          keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+          extendedKeyUsage = serverAuth
+          subjectAltName = @alt_names
+          [alt_names]
+          DNS.1 = ${SERVICE}
+          DNS.2 = ${SERVICE}.${NAMESPACE}
+          DNS.3 = ${SERVICE}.${NAMESPACE}.svc
+          DNS.4 = ${SERVICE}.${NAMESPACE}.svc.cluster.local
+          EOF
+
+          # 生成证书签名请求
+          openssl req -new -key tls.key -out tls.csr -subj "/CN=${SERVICE}.${NAMESPACE}.svc" -config csr.conf
+
+          # 用 CA 签名生成服务器证书
+          openssl x509 -req -in tls.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt -days 365 -extensions v3_req -extfile csr.conf
+
+          # 创建 Secret
+          kubectl create secret generic $CERT_NAME \
+            --from-file=tls.crt=tls.crt \
+            --from-file=tls.key=tls.key \
+            --from-file=ca.crt=ca.crt \
+            -n $NAMESPACE
+
+          # 更新 MutatingWebhookConfiguration 的 CA bundle
+          CA_BUNDLE=$(cat ca.crt | base64 -w 0)
+          kubectl patch mutatingwebhookconfiguration {{ include "k8s-selfhost-repo.fullname" . }}-webhook \
+            --type='json' -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\":\"${CA_BUNDLE}\"}]" -n $NAMESPACE || true
+
+          echo "Secret created successfully"
+{{- end }}
