@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  WEBHOOK_IMAGE_NAME: ${{ github.repository }}/zot-webhook-server
+  WEBHOOK_IMAGE_NAME: ${{ github.repository }}/webhook-server
 
 jobs:
   build-and-push:
