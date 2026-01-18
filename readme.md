@@ -8,6 +8,14 @@
 - Quay.io → `/quay/*`
 - Kubernetes Registry → `/k8s/*`
 
+> !!Attention 项目未完成!!
+> 
+> 已实现:
+> 1. chart 自动化发布
+> 2. clash-sidecar已经可用
+>
+> 简单测试发现 zot 似乎不可用,可能考虑更换成 Distribution 或 Harbor
+
 ## 快速开始
 
 先创建一个测试k8s集群，如果你了解kind，可以参考 [kind.yaml](./test/kind.yaml) 进行创建。
@@ -91,5 +99,6 @@ graph TD
 
 ## Todo
 
-1. 用户自定义 clash 配置
-2. 开放 clash pod svc，允许其他服务访问代理
+1. 考虑把 zot 更换为 Harbor 或者 Distribution
+2. 用户自定义 clash 配置
+3. 开放 clash pod svc，允许其他服务访问代理
