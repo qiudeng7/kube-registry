@@ -76,3 +76,57 @@ export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.
 export NODE_PORT=$(kubectl get svc my-zot -o jsonpath='{.spec.ports[0].nodePort}')
 echo "访问地址: http://${NODE_IP}:${NODE_PORT}"
 ```
+
+### 配置 Docker 客户端
+
+安装完成后，配置 Docker 使用 Zot 的 pull through cache：
+
+#### 方式1：配置 /etc/docker/daemon.json（推荐）
+
+编辑 `/etc/docker/daemon.json`：
+
+```json
+{
+  "registry-mirrors": [
+    "http://<NODE_IP>:<NODE_PORT>"
+  ]
+}
+```
+
+重启 Docker：
+
+```bash
+sudo systemctl restart docker
+```
+
+现在拉取镜像时会自动使用 Zot 缓存：
+
+```bash
+# Docker 会自动从 Zot 拉取（如果已缓存）
+docker pull nginx:latest
+docker pull postgres:14
+```
+
+#### 方式2：手动指定 Zot 地址
+
+拉取时使用完整路径：
+
+```bash
+# Docker Hub 镜像
+docker pull <NODE_IP>:<NODE_PORT>/dockerhub/nginx:latest
+
+# GitHub Container Registry
+docker pull <NODE_IP>:<NODE_PORT>/ghcr/example/app:v1.0
+
+# Quay.io
+docker pull <NODE_IP>:<NODE_PORT>/quayio/prometheus/prometheus:latest
+
+# Kubernetes Registry
+docker pull <NODE_IP>:<NODE_PORT>/k8s/kube-apiserver:v1.28.0
+```
+
+**支持的上游仓库**：
+- Docker Hub → `/dockerhub/*`
+- GHCR → `/ghcr/*`
+- Quay.io → `/quay/*`
+- Kubernetes Registry → `/k8s/*`
