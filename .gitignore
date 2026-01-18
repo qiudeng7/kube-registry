@@ -1,0 +1,23 @@
+# Helm 依赖（动态下载，不提交）
+charts/
+
+# Helm 打包文件
+*.tgz
+
+# Helm 本地缓存
+.helm/
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.log
+*.tmp
