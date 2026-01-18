@@ -1,0 +1,32 @@
+{{- if .Values.s3.region }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "my-zot.fullname" . }}-config
+data:
+  config.json: |
+    {
+      "distSpecVersion": "1.0.1-dev",
+      "storage": {
+        "rootDirectory": "/var/lib/registry",
+        "dedupe": true,
+        "storageDriver": {
+          "name": "s3",
+          "region": "{{ .Values.s3.region }}",
+          {{- if .Values.s3.regionEndpoint }}
+          "regionEndpoint": "{{ .Values.s3.regionEndpoint }}",
+          {{- end }}
+          "bucket": "{{ .Values.s3.bucket }}",
+          "secure": true,
+          "skipverify": false
+        }
+      },
+      "http": {
+        "address": "0.0.0.0",
+        "port": "5000"
+      },
+      "log": {
+        "level": "debug"
+      }
+    }
+{{- end }}

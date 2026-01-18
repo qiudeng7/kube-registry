@@ -1,0 +1,38 @@
+# S3 存储配置（必填）
+s3:
+  region: ""  # 必填：例如 us-east-1
+  bucket: ""  # 必填：S3 存储桶名称
+  regionEndpoint: ""  # 可选：自定义 S3 endpoint（如 MinIO）
+
+# S3 访问凭证（必填）
+s3Credentials:
+  accessKeyId: ""  # 必填：AWS_ACCESS_KEY_ID
+  secretAccessKey: ""  # 必填：AWS_SECRET_ACCESS_KEY
+
+# Zot 配置
+zot:
+  replicaCount: 1
+
+  # 挂载 ConfigMap（包含 S3 配置）
+  mountConfig: true
+
+  # 挂载 Secret（包含 S3 凭证）
+  mountSecret: true
+
+  # 持久化（S3 模式下关闭）
+  persistence: false
+
+  # 资源限制
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+  # 服务配置
+  service:
+    type: NodePort
+    port: 5000
+

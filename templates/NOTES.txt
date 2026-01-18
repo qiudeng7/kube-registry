@@ -1,0 +1,21 @@
+感谢安装 my-zot！
+
+您的 Zot 容器镜像仓库已配置为使用 S3 存储。
+
+SECRET_NAME="{{ include "my-zot.fullname" . }}-secret"
+CONFIG_NAME="{{ include "my-zot.fullname" . }}-config"
+
+环境变量已自动注入到 Zot 容器：
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+
+获取访问地址：
+  export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+  export NODE_PORT=$(kubectl get svc {{ include "my-zot.fullname" . }} -o jsonpath='{.spec.ports[0].nodePort}')
+  echo "访问地址: http://${NODE_IP}:${NODE_PORT}"
+
+查看 S3 配置：
+  kubectl get configmap ${CONFIG_NAME} -o yaml
+
+查看凭证（加密存储）：
+  kubectl get secret ${SECRET_NAME} -o yaml
