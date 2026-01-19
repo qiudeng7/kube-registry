@@ -8,13 +8,21 @@
 - Quay.io → `/quay/*`
 - Kubernetes Registry → `/k8s/*`
 
-> !!Attention 项目未完成!!
-> 
-> 已实现:
-> 1. chart 自动化发布
-> 2. clash-sidecar已经可用
->
-> 简单测试发现 zot 似乎不可用,可能考虑更换成 Distribution 或 Harbor
+## 项目未完成说明
+
+**1. 已测试功能：**
+
+1. chart 自动化发布
+2. clash-sidecar已经可用
+
+**2. 已知问题：**
+
+- 简单测试发现 zot 似乎不可用,可能考虑更换成 Distribution 或 Harbor
+
+**3. 其他说明**
+
+1. 测试的时候发现公益代理 `m.daocloud.io` 效果很好，如果不使用本项目，可以手动修改 values 中的镜像，改成 m.daocloud.io 代理，或者只用 webhook 进行m.daocloud.io 代理不进行缓存。
+2. 虽然 m.daocloud.io 方法不错，但是添加缓存可以减轻公益代理的负担。
 
 ## 快速开始
 
